@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notas — Primer Parcial · Bases de Datos</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --warn: #f0883e;
+    --danger: #ff7b72;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    letter-spacing: .3px;
+  }
+  .header-text p {
+    font-size: 13px; color: var(--text2); margin-top: 2px;
+  }
+
+  /* ── Main ── */
+  main {
+    width: 100%; max-width: 640px;
+    padding: 40px 16px 60px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+
+  /* ── Search card ── */
+  .search-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+  }
+  .search-card h2 {
+    font-size: 15px; font-weight: 500; color: var(--text2);
+    margin-bottom: 16px; letter-spacing: .4px; text-transform: uppercase;
+    font-size: 12px;
+  }
+  .input-row {
+    display: flex; gap: 10px;
+  }
+  input[type="text"] {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px; font-weight: 600;
+    letter-spacing: 2px;
+    padding: 11px 16px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--text3); font-weight: 400; letter-spacing: 1px; }
+  button#buscar {
+    background: var(--accent);
+    color: #0d1117;
+    border: none; border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 11px 22px;
+    cursor: pointer;
+    transition: opacity .2s;
+    white-space: nowrap;
+  }
+  button#buscar:hover { opacity: .85; }
+
+  /* ── Error msg ── */
+  #error-msg {
+    display: none;
+    background: rgba(255,123,114,.08);
+    border: 1px solid rgba(255,123,114,.3);
+    border-radius: 6px;
+    color: var(--danger);
+    font-size: 14px;
+    padding: 10px 14px;
+    margin-top: 14px;
+  }
+
+  /* ── Result card ── */
+  #result {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  .result-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .carnet-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .carnet-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px; font-weight: 700; color: var(--text);
+    letter-spacing: 2px;
+  }
+  .seccion-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    color: var(--text2);
+    padding: 4px 12px;
+  }
+
+  /* Score big */
+  .score-section {
+    padding: 24px 24px 0;
+    display: flex; align-items: flex-end; gap: 8px;
+  }
+  .score-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 56px; font-weight: 700;
+    line-height: 1;
+  }
+  .score-max { font-size: 22px; color: var(--text2); margin-bottom: 6px; }
+  .score-label { font-size: 13px; color: var(--text2); margin-bottom: 10px; margin-left: 4px; }
+
+  /* Progress bar */
+  .progress-wrap {
+    padding: 16px 24px 0;
+  }
+  .progress-bg {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Breakdown grid */
+  .breakdown {
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .breakdown-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .breakdown-item .bi-label {
+    font-size: 11px; color: var(--text3); text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 6px;
+  }
+  .breakdown-item .bi-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px; font-weight: 700;
+  }
+  .breakdown-item .bi-max {
+    font-size: 11px; color: var(--text3); margin-left: 2px;
+  }
+
+  /* Observations */
+  .obs-section {
+    padding: 20px 24px 24px;
+  }
+  .obs-section h3 {
+    font-size: 12px; color: var(--text2); text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 12px;
+  }
+  .obs-none {
+    color: var(--accent2);
+    font-size: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .obs-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .obs-list li {
+    background: rgba(240,136,62,.06);
+    border-left: 3px solid var(--warn);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 13.5px; line-height: 1.5;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    word-break: break-word;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: auto;
+    padding: 20px;
+    color: var(--text3);
+    font-size: 12px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    width: 100%;
+  }
+
+  @media (max-width: 480px) {
+    .breakdown { grid-template-columns: repeat(2, 1fr); }
+    .score-number { font-size: 44px; }
+    .input-row { flex-direction: column; }
+    button#buscar { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🗄️</div>
+  <div class="header-text">
+    <h1>Bases de Datos — Primer Parcial</h1>
+    <p>Consulta de calificaciones · DDL &amp; Integridad Referencial</p>
+  </div>
+</header>
+
+<main>
+  <div class="search-card">
+    <h2>Ingresa tu carné</h2>
+    <div class="input-row">
+      <input type="text" id="carnet-input" placeholder="00000000" maxlength="20"
+             autocomplete="off" autocorrect="off" spellcheck="false">
+      <button id="buscar">Consultar</button>
+    </div>
+    <div id="error-msg">❌ Carné no encontrado. Verifica que esté escrito correctamente.</div>
+  </div>
+
+  <div id="result">
+    <div class="result-header">
+      <div>
+        <div class="carnet-label">Carné</div>
+        <div class="carnet-val" id="r-carnet">—</div>
+      </div>
+      <div class="seccion-badge" id="r-seccion">—</div>
+    </div>
+
+    <div class="score-section">
+      <div class="score-number" id="r-total">0</div>
+      <div class="score-max">/100</div>
+      <div class="score-label">puntos</div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bg">
+        <div class="progress-fill" id="r-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-item">
+        <div class="bi-label">Tablas</div>
+        <div class="bi-score" id="r-tb">0<span class="bi-max">/30</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">PK</div>
+        <div class="bi-score" id="r-pk">0<span class="bi-max">/20</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">FK</div>
+        <div class="bi-score" id="r-fk">0<span class="bi-max">/25</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">UNIQUE</div>
+        <div class="bi-score" id="r-uq">0<span class="bi-max">/10</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">CHECK</div>
+        <div class="bi-score" id="r-ck">0<span class="bi-max">/10</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">DEFAULT</div>
+        <div class="bi-score" id="r-df">0<span class="bi-max">/5</span></div>
+      </div>
+    </div>
+
+    <div class="obs-section">
+      <h3>Observaciones del corrector</h3>
+      <div id="r-obs"></div>
+    </div>
+  </div>
+</main>
+
+<footer>Los datos son de uso personal. No compartas tu carné con terceros.</footer>
+
+<script>
+const DATA = {"00013525": {"s": "Sección 1", "t": 60, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados. ERROR:  column id_seguro referenced in foreign key constraint does not exist", "2 Correcciones adicionales", "Agregar al menos un CHECK en cita."]}, "00016824": {"s": "Sección 1", "t": 82, "tb": 30, "pk": 17, "fk": 10, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en seguro(id_seguro).", "FK medico(id_especialidad)->especialidad con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00021925": {"s": "Sección 1", "t": 86, "tb": 30, "pk": 20, "fk": 20, "uq": 3, "ck": 10, "df": 3, "o": ["FK paciente(id_seguro)->seguro con UPDATE CASCADE y DELETE SET NULL.", "UNIQUE esperado en seguro(nombre).", "UNIQUE esperado en paciente(email).", "DEFAULT esperado en cita.estado."]}, "00045324": {"s": "Sección 1", "t": 84, "tb": 30, "pk": 20, "fk": 15, "uq": 6, "ck": 10, "df": 3, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email).", "DEFAULT esperado en cita.fecha (now())."]}, "00054625": {"s": "Sección 1", "t": 90, "tb": 30, "pk": 20, "fk": 15, "uq": 10, "ck": 10, "df": 5, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00067525": {"s": "Sección 1", "t": 52, "tb": 30, "pk": 0, "fk": 15, "uq": 0, "ck": 4, "df": 3, "o": ["PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico).", "FK paciente(id_seguro)->seguro con UPDATE CASCADE y DELETE SET NULL.", "FK diagnostico(id_cita)->cita con UPDATE CASCADE y DELETE CASCADE.", "UNIQUE esperado en especialidad(nombre).", "UNIQUE esperado en seguro(nombre).", "UNIQUE esperado en paciente(email).", "Agregar al menos un CHECK en seguro.", "Agregar al menos un CHECK en paciente.", "DEFAULT esperado en cita.estado."]}, "00074525": {"s": "Sección 1", "t": 82, "tb": 30, "pk": 20, "fk": 10, "uq": 10, "ck": 7, "df": 5, "o": ["FK paciente(id_seguro)->seguro con UPDATE CASCADE y DELETE SET NULL.", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "Agregar al menos un CHECK en paciente."]}, "00082824": {"s": "Sección 1", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00087025": {"s": "Sección 1", "t": 50, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "ERROR:  date/time field value out of range: 16/4/2026 08:37 |correciones adicionales", "UNIQUE esperado en especialidad(nombre).", "UNIQUE esperado en seguro(nombre).", "Agregar al menos un CHECK en paciente.", "DEFAULT esperado en cita.fecha (now()).", "DEFAULT esperado en cita.estado.", "DEFAULT esperado en diagnostico.fecha."]}, "00087525": {"s": "Sección 1", "t": 86, "tb": 30, "pk": 20, "fk": 15, "uq": 6, "ck": 10, "df": 5, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email)."]}, "00093924": {"s": "Sección 1", "t": 84, "tb": 30, "pk": 20, "fk": 15, "uq": 6, "ck": 10, "df": 3, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email).", "DEFAULT esperado en cita.fecha (now())."]}, "00100224": {"s": "Sección 1", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00107723": {"s": "Sección 1", "t": 66, "tb": 30, "pk": 0, "fk": 15, "uq": 6, "ck": 10, "df": 5, "o": ["PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico).", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email)."]}, "00135723": {"s": "Sección 1", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00138821": {"s": "Sección 1", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00140023": {"s": "Sección 1", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00155425": {"s": "Sección 1", "t": 70, "tb": 30, "pk": 0, "fk": 15, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico).", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00158525": {"s": "Sección 1", "t": 80, "tb": 30, "pk": 0, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico)."]}, "00160223": {"s": "Sección 1", "t": 90, "tb": 30, "pk": 20, "fk": 15, "uq": 10, "ck": 10, "df": 5, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00177525": {"s": "Sección 1", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00180825": {"s": "Sección 1", "t": 84, "tb": 30, "pk": 20, "fk": 15, "uq": 6, "ck": 10, "df": 3, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email).", "DEFAULT esperado en cita.fecha (now())."]}, "00186825": {"s": "Sección 1", "t": 81, "tb": 30, "pk": 20, "fk": 10, "uq": 6, "ck": 10, "df": 5, "o": ["FK paciente(id_seguro)->seguro con UPDATE CASCADE y DELETE SET NULL.", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email)."]}, "00188625": {"s": "Sección 1", "t": 70, "tb": 30, "pk": 0, "fk": 15, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico).", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00235325": {"s": "Sección 1", "t": 84, "tb": 30, "pk": 20, "fk": 15, "uq": 6, "ck": 10, "df": 3, "o": ["FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email).", "DEFAULT esperado en cita.fecha (now())."]}, "00302725": {"s": "Sección 1", "t": 86, "tb": 30, "pk": 20, "fk": 15, "uq": 6, "ck": 10, "df": 5, "o": ["FK paciente(id_seguro)->seguro con UPDATE CASCADE y DELETE SET NULL.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en paciente(email)."]}, "00362224": {"s": "Sección 1", "t": 58, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas", "Tablas en plurar y por eso no coinciden con el esquema.", "Falta tabla seguro.", "PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico).", "FK paciente(id_seguro)->seguro con UPDATE CASCADE y DELETE SET NULL.", "UNIQUE esperado en especialidad(nombre).", "UNIQUE esperado en seguro(nombre).", "Agregar al menos un CHECK en seguro.", "DEFAULT esperado en cita.fecha (now()).", "DEFAULT esperado en diagnostico.fecha."]}, "00367725": {"s": "Sección 1", "t": 70, "tb": 30, "pk": 0, "fk": 15, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en especialidad(id_especialidad).", "PK esperada en seguro(id_seguro).", "PK esperada en paciente(id_paciente).", "PK esperada en medico(id_medico).", "PK esperada en cita(id_cita).", "PK esperada en diagnostico(id_diagnostico).", "FK cita(id_paciente)->paciente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK cita(id_medico)->medico con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00000725": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00001825": {"s": "Sección 2", "t": 86, "tb": 30, "pk": 20, "fk": 20, "uq": 3, "ck": 10, "df": 3, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "DEFAULT esperado en prestamo.fecha_inicio."]}, "00014325": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00015725": {"s": "Sección 2", "t": 91, "tb": 30, "pk": 20, "fk": 20, "uq": 6, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00017425": {"s": "Sección 2", "t": 73, "tb": 30, "pk": 0, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00018825": {"s": "Sección 2", "t": 90, "tb": 30, "pk": 20, "fk": 18, "uq": 10, "ck": 7, "df": 5, "o": ["FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "Agregar al menos un CHECK en socio."]}, "00020725": {"s": "Sección 2", "t": 91, "tb": 30, "pk": 20, "fk": 20, "uq": 7, "ck": 10, "df": 4, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "DEFAULT esperado en prestamo.devuelto."]}, "00021325": {"s": "Sección 2", "t": 74, "tb": 30, "pk": 4, "fk": 20, "uq": 10, "ck": 10, "df": 0, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "DEFAULT esperado en ejemplar.estado.", "DEFAULT esperado en prestamo.fecha_inicio.", "DEFAULT esperado en prestamo.devuelto."]}, "00023525": {"s": "Sección 2", "t": 10, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["Presentó el mismo script que su compañero con carnet 00109425", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00026825": {"s": "Sección 2", "t": 77, "tb": 30, "pk": 16, "fk": 13, "uq": 3, "ck": 10, "df": 5, "o": ["PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00029425": {"s": "Sección 2", "t": 50, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Mala definición del check (correo like '%') >1", "Default 'Fecha Actual'  no es un valor posible.", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE."]}, "00032125": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00032225": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00033325": {"s": "Sección 2", "t": 81, "tb": 30, "pk": 16, "fk": 13, "uq": 10, "ck": 7, "df": 5, "o": ["PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "Agregar al menos un CHECK en ejemplar."]}, "00033625": {"s": "Sección 2", "t": 70, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Default del campo fecha fuera de rango", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00034725": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00036225": {"s": "Sección 2", "t": 40, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "PK  mal definidas - primary key IDENTITY(1,1) no existe", "Check correo mal definido| 4 correciones |"]}, "00036625": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00036725": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 18, "uq": 10, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE."]}, "00044125": {"s": "Sección 2", "t": 40, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Pk_prestamo definida en 2 tablas diferentes", "FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo(id_socio)->socio con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "Agregar al menos un CHECK en prestamo."]}, "00052524": {"s": "Sección 2", "t": 84, "tb": 30, "pk": 20, "fk": 13, "uq": 6, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00054525": {"s": "Sección 2", "t": 40, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "constraint ck_estado mal definidan", "Coma adicional", "foreign key en prestamo hace referencia a un campo que no existe", "FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo(id_socio)->socio con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE."]}, "00064825": {"s": "Sección 2", "t": 89, "tb": 30, "pk": 20, "fk": 20, "uq": 6, "ck": 10, "df": 3, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "DEFAULT esperado en prestamo.fecha_inicio."]}, "00070822": {"s": "Sección 2", "t": 40, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Uso de comilla dobles en valores check", "pk_libro definido dos veces", "pk_ejemplar definido dos veces", "Coma adicional en la última tabla", "PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "Agregar al menos un CHECK en prestamo.", "DEFAULT esperado en ejemplar.estado.", "DEFAULT esperado en prestamo.fecha_inicio.", "DEFAULT esperado en prestamo.devuelto."]}, "00071125": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00071425": {"s": "Sección 2", "t": 87, "tb": 30, "pk": 16, "fk": 20, "uq": 6, "ck": 10, "df": 5, "o": ["PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00071625": {"s": "Sección 2", "t": 65, "tb": 30, "pk": 4, "fk": 13, "uq": 3, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00077125": {"s": "Sección 2", "t": 72, "tb": 30, "pk": 4, "fk": 13, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00077225": {"s": "Sección 2", "t": 78, "tb": 24, "pk": 16, "fk": 13, "uq": 10, "ck": 10, "df": 5, "o": ["Falta tabla prestamo_detalle.", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00077325": {"s": "Sección 2", "t": 77, "tb": 30, "pk": 0, "fk": 25, "uq": 7, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "UNIQUE esperado en socio(email)."]}, "00082024": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00085425": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00085525": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00089625": {"s": "Sección 2", "t": 80, "tb": 30, "pk": 12, "fk": 20, "uq": 3, "ck": 10, "df": 5, "o": ["PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00091525": {"s": "Sección 2", "t": 78, "tb": 30, "pk": 12, "fk": 18, "uq": 6, "ck": 10, "df": 2, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "DEFAULT esperado en ejemplar.estado.", "DEFAULT esperado en prestamo.devuelto."]}, "00092625": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00092725": {"s": "Sección 2", "t": 73, "tb": 30, "pk": 0, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00098225": {"s": "Sección 2", "t": 95, "tb": 30, "pk": 20, "fk": 20, "uq": 10, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00100725": {"s": "Sección 2", "t": 84, "tb": 30, "pk": 20, "fk": 20, "uq": 3, "ck": 10, "df": 1, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "DEFAULT esperado en ejemplar.estado.", "DEFAULT esperado en prestamo.fecha_inicio."]}, "00101024": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00108225": {"s": "Sección 2", "t": 88, "tb": 30, "pk": 20, "fk": 20, "uq": 3, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00109425": {"s": "Sección 2", "t": 10, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["Presentó el mismo script que su compañero con carnet 00023525", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00110125": {"s": "Sección 2", "t": 95, "tb": 30, "pk": 20, "fk": 20, "uq": 10, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00111925": {"s": "Sección 2", "t": 86, "tb": 30, "pk": 20, "fk": 20, "uq": 3, "ck": 10, "df": 3, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "DEFAULT esperado en ejemplar.estado."]}, "00114825": {"s": "Sección 2", "t": 98, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 3, "o": ["DEFAULT esperado en prestamo.fecha_inicio."]}, "00115025": {"s": "Sección 2", "t": 92, "tb": 30, "pk": 20, "fk": 20, "uq": 7, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email)."]}, "00115725": {"s": "Sección 2", "t": 85, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Falta punto y coma al final de cada instrucción create"]}, "00118825": {"s": "Sección 2", "t": 92, "tb": 30, "pk": 20, "fk": 20, "uq": 7, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email)."]}, "00122425": {"s": "Sección 2", "t": 92, "tb": 30, "pk": 20, "fk": 20, "uq": 7, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email)."]}, "00125625": {"s": "Sección 2", "t": 78, "tb": 30, "pk": 20, "fk": 7, "uq": 6, "ck": 10, "df": 5, "o": ["FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo(id_socio)->socio con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00126025": {"s": "Sección 2", "t": 88, "tb": 30, "pk": 20, "fk": 20, "uq": 3, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00126525": {"s": "Sección 2", "t": 30, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "generated mal escrito", "faltó comilla simple en cierre del ckeck", "Check mal escrito en correo| 6 correciones", "PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00131225": {"s": "Sección 2", "t": 40, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas.", "PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00134525": {"s": "Sección 2", "t": 86, "tb": 30, "pk": 20, "fk": 20, "uq": 10, "ck": 6, "df": 0, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "Agregar al menos un CHECK en prestamo.", "DEFAULT esperado en ejemplar.estado.", "DEFAULT esperado en prestamo.fecha_inicio.", "DEFAULT esperado en prestamo.devuelto."]}, "00140725": {"s": "Sección 2", "t": 30, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "No esxiste el campo estado al que hace referencia el constraint de la tabla ejemplar", "Prestamo_detalle le falta el cierre de la defición (;)", "PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "Agregar al menos un CHECK en ejemplar.", "DEFAULT esperado en ejemplar.estado."]}, "00146324": {"s": "Sección 2", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Presentó el mismo script que su compañero con carnet 00152824."]}, "00147325": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00152622": {"s": "Sección 2", "t": 68, "tb": 30, "pk": 20, "fk": 5, "uq": 6, "ck": 4, "df": 3, "o": ["FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo(id_socio)->socio con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "Agregar al menos un CHECK en socio.", "Agregar al menos un CHECK en ejemplar.", "DEFAULT esperado en prestamo.fecha_inicio."]}, "00152824": {"s": "Sección 2", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Presentó el mismo script que su compañero con carnet 00146324."]}, "00153925": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00156625": {"s": "Sección 2", "t": 40, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "FK hace referencia a un campo que no es PK", "PK esperada en prestamo(id_prestamo).", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "Agregar al menos un CHECK en prestamo."]}, "00167525": {"s": "Sección 2", "t": 92, "tb": 30, "pk": 20, "fk": 20, "uq": 7, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email)."]}, "00167625": {"s": "Sección 2", "t": 72, "tb": 30, "pk": 4, "fk": 20, "uq": 3, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00179025": {"s": "Sección 2", "t": 92, "tb": 30, "pk": 20, "fk": 20, "uq": 7, "ck": 10, "df": 5, "o": ["FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email)."]}, "00184924": {"s": "Sección 2", "t": 20, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Falta una coma en la definición de la tabla prestamo", "Se definen FK  en campos que no existen", "Mala definición de varchar| Tiene una cama adicional en la tabla libro |6 Correcciones|"]}, "00185223": {"s": "Sección 2", "t": 96, "tb": 30, "pk": 20, "fk": 25, "uq": 6, "ck": 10, "df": 5, "o": ["UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00191323": {"s": "Sección 2", "t": 85, "tb": 30, "pk": 20, "fk": 13, "uq": 7, "ck": 10, "df": 5, "o": ["FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email)."]}, "00200524": {"s": "Sección 2", "t": 68, "tb": 30, "pk": 16, "fk": 6, "uq": 3, "ck": 10, "df": 3, "o": ["PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras).", "DEFAULT esperado en prestamo.fecha_inicio."]}, "00209423": {"s": "Sección 2", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00209425": {"s": "Sección 2", "t": 92, "tb": 30, "pk": 20, "fk": 25, "uq": 7, "ck": 7, "df": 3, "o": ["UNIQUE esperado en socio(email).", "Agregar al menos un CHECK en socio.", "DEFAULT esperado en prestamo.fecha_inicio."]}, "00221125": {"s": "Sección 2", "t": 91, "tb": 30, "pk": 16, "fk": 20, "uq": 10, "ck": 10, "df": 5, "o": ["PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00226325": {"s": "Sección 2", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00252125": {"s": "Sección 2", "t": 71, "tb": 30, "pk": 20, "fk": 5, "uq": 7, "ck": 7, "df": 2, "o": ["FK ejemplar(id_libro)->libro con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo(id_socio)->socio con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "UNIQUE esperado en socio(email).", "Agregar al menos un CHECK en ejemplar.", "DEFAULT esperado en prestamo.fecha_inicio.", "DEFAULT esperado en prestamo.devuelto."]}, "00369425": {"s": "Sección 2", "t": 73, "tb": 30, "pk": 0, "fk": 25, "uq": 3, "ck": 10, "df": 5, "o": ["PK esperada en socio(id_socio).", "PK esperada en libro(id_libro).", "PK esperada en ejemplar(id_ejemplar).", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "UNIQUE esperado en socio(email).", "UNIQUE esperado en ejemplar(codigo/codigo_barras)."]}, "00370825": {"s": "Sección 2", "t": 91, "tb": 30, "pk": 16, "fk": 20, "uq": 10, "ck": 10, "df": 5, "o": ["PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION."]}, "00388525": {"s": "Sección 2", "t": 30, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Coma adicional en la definición de la última tabla", "Falta tabla prestamo_detalle.", "PK esperada en prestamo(id_prestamo).", "PK compuesta esperada en prestamo_detalle(id_prestamo,id_ejemplar).", "FK prestamo(id_socio)->socio con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK prestamo_detalle(id_prestamo)->prestamo con DELETE CASCADE y UPDATE CASCADE.", "FK prestamo_detalle(id_ejemplar)->ejemplar con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "Agregar al menos un CHECK en ejemplar.", "Agregar al menos un CHECK en prestamo.", "DEFAULT esperado en prestamo.devuelto."]}, "00003525": {"s": "Sección 3", "t": 80, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas.", "No se nombró las tablas como se indica en el parcial"]}, "00003925": {"s": "Sección 3", "t": 62, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Coma adicional en la definición de la tabla pago", "Falta coma en la definición de la tabla pedido_detalle |FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email)."]}, "00005225": {"s": "Sección 3", "t": 95, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 5, "o": ["UNIQUE esperado en cliente(email)."]}, "00012725": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00017125": {"s": "Sección 3", "t": 67, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas.", "Uso de sufijo public", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00019725": {"s": "Sección 3", "t": 55, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas.", "No se nombró las tablas como se indica en el parcial", "Falta tabla cliente.", "PK esperada en cliente(id_cliente).", "FK pedido(id_cliente)->cliente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en cliente(email).", "Agregar al menos un CHECK en cliente.", "DEFAULT esperado en pedido.fecha (now())."]}, "00025825": {"s": "Sección 3", "t": 93, "tb": 30, "pk": 20, "fk": 18, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE."]}, "00030123": {"s": "Sección 3", "t": 39, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Uso de sufijo public", "FK pedido(id_cliente)->cliente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "FK pago(id_pedido)->pedido con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en cliente(email).", "UNIQUE esperado en producto(sku).", "Agregar al menos un CHECK en producto.", "Agregar al menos un CHECK en pedido.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00033125": {"s": "Sección 3", "t": 98, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 3, "o": ["DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00033225": {"s": "Sección 3", "t": 88, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 6, "df": 2, "o": ["UNIQUE esperado en cliente(email).", "Agregar al menos un CHECK en cliente.", "Agregar al menos un CHECK en pedido.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pedido.estado.", "DEFAULT esperado en pago.fecha (now())."]}, "00039425": {"s": "Sección 3", "t": 55, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas.", "No se nombró las tablas como se indica en el parcial", "Falta tabla pedido_detalle.", "PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "Agregar al menos un CHECK en pedido_detalle."]}, "00041625": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00042025": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00043625": {"s": "Sección 3", "t": 88, "tb": 30, "pk": 20, "fk": 19, "uq": 5, "ck": 10, "df": 4, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "DEFAULT esperado en pago.fecha (now())."]}, "00047225": {"s": "Sección 3", "t": 96, "tb": 30, "pk": 16, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": ["PK compuesta esperada en pedido_detalle(id_pedido,id_producto)."]}, "00048825": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00062725": {"s": "Sección 3", "t": 61, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Falta punto y coma en la definición de cada tabla", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "UNIQUE esperado en producto(sku).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pedido.estado.", "DEFAULT esperado en pago.fecha (now())."]}, "00063925": {"s": "Sección 3", "t": 75, "tb": 30, "pk": 0, "fk": 25, "uq": 5, "ck": 10, "df": 5, "o": ["PK esperada en cliente(id_cliente).", "PK esperada en producto(id_producto).", "PK esperada en pedido(id_pedido).", "PK esperada en pago(id_pago).", "PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "UNIQUE esperado en cliente(email)."]}, "00067425": {"s": "Sección 3", "t": 71, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Falló la definición del check en el campo correo", "comando drop en medio del script", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "UNIQUE esperado en producto(sku).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00068125": {"s": "Sección 3", "t": 69, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["No se pudo identificar la versión del parcial por los nombres de tablas creadas.", "No se nombró las tablas como se indica en el parcial", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "Agregar al menos un CHECK en pedido_detalle.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00072325": {"s": "Sección 3", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 3, "o": ["UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00072825": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00075925": {"s": "Sección 3", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 3, "o": ["UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00076325": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00076825": {"s": "Sección 3", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00080525": {"s": "Sección 3", "t": 77, "tb": 30, "pk": 20, "fk": 7, "uq": 5, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "FK pago(id_pedido)->pedido con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "UNIQUE esperado en cliente(email)."]}, "00083924": {"s": "Sección 3", "t": 92, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 3, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "DEFAULT esperado en producto.stock."]}, "00086125": {"s": "Sección 3", "t": 92, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 2, "o": ["UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pedido.estado.", "DEFAULT esperado en pago.fecha (now())."]}, "00087325": {"s": "Sección 3", "t": 87, "tb": 30, "pk": 20, "fk": 19, "uq": 5, "ck": 8, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "Agregar al menos un CHECK en cliente."]}, "00087925": {"s": "Sección 3", "t": 98, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 3, "o": ["DEFAULT esperado en producto.stock."]}, "00090225": {"s": "Sección 3", "t": 92, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 3, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00095725": {"s": "Sección 3", "t": 71, "tb": 30, "pk": 4, "fk": 19, "uq": 5, "ck": 10, "df": 3, "o": ["PK esperada en cliente(id_cliente).", "PK esperada en producto(id_producto).", "PK esperada en pedido(id_pedido).", "PK esperada en pago(id_pago).", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00096325": {"s": "Sección 3", "t": 92, "tb": 30, "pk": 20, "fk": 18, "uq": 10, "ck": 10, "df": 4, "o": ["FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "DEFAULT esperado en pago.fecha (now())."]}, "00098725": {"s": "Sección 3", "t": 85, "tb": 30, "pk": 20, "fk": 25, "uq": 0, "ck": 10, "df": 0, "o": ["UNIQUE esperado en cliente(email).", "UNIQUE esperado en producto(sku).", "DEFAULT esperado en producto.stock.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pedido.estado.", "DEFAULT esperado en pago.fecha (now())."]}, "00099123": {"s": "Sección 3", "t": 52, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "En la tabla pago se hizó un check inadecuado en el campo metodo", "En la tabla pedido se hizo un ckeck indadecuado en el campo estado", "PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "FK pago(id_pedido)->pedido con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "Agregar al menos un CHECK en pedido.", "DEFAULT esperado en producto.stock.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00099324": {"s": "Sección 3", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00107225": {"s": "Sección 3", "t": 80, "tb": 30, "pk": 20, "fk": 12, "uq": 5, "ck": 8, "df": 5, "o": ["FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "Agregar al menos un CHECK en pedido."]}, "00115625": {"s": "Sección 3", "t": 79, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "DEFAULT esperado en pedido.estado.", "Falta punto y coma en la definición de cada tabla"]}, "00119525": {"s": "Sección 3", "t": 39, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "El campo int no puede ir acompañado de (5)", "falta una coma en la definición de la tabla cliente", "on delete cascade on update cascade mal ubicado en check", "Definición de PK y FK incorrectos en la tabla"]}, "00128925": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00129024": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00131025": {"s": "Sección 3", "t": 93, "tb": 30, "pk": 20, "fk": 18, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE."]}, "00131725": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00133225": {"s": "Sección 3", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00134125": {"s": "Sección 3", "t": 80, "tb": 30, "pk": 20, "fk": 12, "uq": 5, "ck": 10, "df": 3, "o": ["FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00134424": {"s": "Sección 3", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00135025": {"s": "Sección 3", "t": 96, "tb": 30, "pk": 16, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": ["PK compuesta esperada en pedido_detalle(id_pedido,id_producto)."]}, "00135525": {"s": "Sección 3", "t": 67, "tb": 30, "pk": 0, "fk": 19, "uq": 5, "ck": 10, "df": 3, "o": ["PK esperada en cliente(id_cliente).", "PK esperada en producto(id_producto).", "PK esperada en pedido(id_pedido).", "PK esperada en pago(id_pago).", "PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00137525": {"s": "Sección 3", "t": 78, "tb": 30, "pk": 0, "fk": 25, "uq": 10, "ck": 10, "df": 3, "o": ["PK esperada en cliente(id_cliente).", "PK esperada en producto(id_producto).", "PK esperada en pedido(id_pedido).", "PK esperada en pago(id_pago).", "PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00141525": {"s": "Sección 3", "t": 89, "tb": 30, "pk": 16, "fk": 18, "uq": 10, "ck": 10, "df": 5, "o": ["PK esperada en pago(id_pago).", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE."]}, "00154325": {"s": "Sección 3", "t": 91, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 1, "o": ["UNIQUE esperado en cliente(email).", "DEFAULT esperado en producto.stock.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00159925": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00171625": {"s": "Sección 3", "t": 70, "tb": 24, "pk": 16, "fk": 12, "uq": 5, "ck": 8, "df": 5, "o": ["Falta tabla pedido_detalle.", "PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "FK pedido_detalle(id_pedido)->pedido con DELETE CASCADE y UPDATE CASCADE.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "Agregar al menos un CHECK en pedido_detalle."]}, "00175525": {"s": "Sección 3", "t": 80, "tb": 30, "pk": 20, "fk": 19, "uq": 0, "ck": 10, "df": 1, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "UNIQUE esperado en producto(sku).", "DEFAULT esperado en producto.stock.", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00181425": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00184725": {"s": "Sección 3", "t": 89, "tb": 30, "pk": 20, "fk": 19, "uq": 5, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email)."]}, "00185725": {"s": "Sección 3", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}, "00193025": {"s": "Sección 3", "t": 93, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 3, "o": ["UNIQUE esperado en cliente(email).", "DEFAULT esperado en pedido.fecha (now()).", "DEFAULT esperado en pago.fecha (now())."]}, "00203725": {"s": "Sección 3", "t": 95, "tb": 30, "pk": 16, "fk": 25, "uq": 10, "ck": 10, "df": 4, "o": ["PK compuesta esperada en pedido_detalle(id_pedido,id_producto).", "DEFAULT esperado en pago.fecha (now())."]}, "00211424": {"s": "Sección 3", "t": 70, "tb": 24, "pk": 16, "fk": 12, "uq": 5, "ck": 8, "df": 5, "o": ["Falta tabla cliente.", "PK esperada en cliente(id_cliente).", "FK pedido(id_cliente)->cliente con UPDATE CASCADE y DELETE RESTRICT/NO ACTION.", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE.", "UNIQUE esperado en cliente(email).", "Agregar al menos un CHECK en cliente."]}, "00237625": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00249025": {"s": "Sección 3", "t": 100, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": []}, "00308726": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00360925": {"s": "Sección 3", "t": 95, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 5, "o": ["UNIQUE esperado en cliente(email)."]}, "00374124": {"s": "Sección 3", "t": 20, "tb": 30, "pk": 20, "fk": 25, "uq": 10, "ck": 10, "df": 5, "o": ["La instructora encontró al estudiante usando WhatsApp, por lo que se penaliza con copia."]}, "00382425": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00383825": {"s": "Sección 3", "t": 74, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados.", "Falta coma en la definición de la tabla pago", "Check incompleto", "FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00385125": {"s": "Sección 3", "t": 94, "tb": 30, "pk": 20, "fk": 19, "uq": 10, "ck": 10, "df": 5, "o": ["FK pedido_detalle(id_producto)->producto con DELETE RESTRICT/NO ACTION y UPDATE CASCADE."]}, "00402224": {"s": "Sección 3", "t": 95, "tb": 30, "pk": 20, "fk": 25, "uq": 5, "ck": 10, "df": 5, "o": ["UNIQUE esperado en cliente(email)."]}, "00144625": {"s": "Sección 3", "t": 0, "tb": 0, "pk": 0, "fk": 0, "uq": 0, "ck": 0, "df": 0, "o": ["Error ejecutando el script. Revisar sintaxis, orden de creación y nombres esperados."]}}
+;
+
+function scoreColor(pct) {
+  if (pct >= 90) return '#3fb950';
+  if (pct >= 70) return '#58a6ff';
+  if (pct >= 60) return '#f0883e';
+  return '#ff7b72';
+}
+
+function lookup() {
+  const raw = document.getElementById('carnet-input').value.trim();
+  const errEl = document.getElementById('error-msg');
+  const resultEl = document.getElementById('result');
+
+  // Try exact match first, then padded
+  let key = null;
+  if (DATA[raw]) key = raw;
+  else {
+    const padded = raw.padStart(8, '0');
+    if (DATA[padded]) key = padded;
+  }
+
+  if (!key) {
+    errEl.style.display = 'block';
+    resultEl.style.display = 'none';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  const d = DATA[key];
+  const pct = d.t;
+  const color = scoreColor(pct);
+
+  document.getElementById('r-carnet').textContent = key;
+  document.getElementById('r-seccion').textContent = d.s;
+  document.getElementById('r-total').textContent = d.t;
+  document.getElementById('r-total').style.color = color;
+
+  const bar = document.getElementById('r-bar');
+  bar.style.background = color;
+  bar.style.width = '0%';
+  setTimeout(() => bar.style.width = pct + '%', 50);
+
+  document.getElementById('r-tb').innerHTML = d.tb + '<span class="bi-max">/30</span>';
+  document.getElementById('r-pk').innerHTML = d.pk + '<span class="bi-max">/20</span>';
+  document.getElementById('r-fk').innerHTML = d.fk + '<span class="bi-max">/25</span>';
+  document.getElementById('r-uq').innerHTML = d.uq + '<span class="bi-max">/10</span>';
+  document.getElementById('r-ck').innerHTML = d.ck + '<span class="bi-max">/10</span>';
+  document.getElementById('r-df').innerHTML = d.df + '<span class="bi-max">/5</span>';
+
+  const obsEl = document.getElementById('r-obs');
+  if (d.o.length === 0) {
+    obsEl.innerHTML = '<div class="obs-none">✅ Sin observaciones. ¡Excelente trabajo!</div>';
+  } else {
+    obsEl.innerHTML = '<ul class="obs-list">' + d.o.map(o => `<li>${o}</li>`).join('') + '</ul>';
+  }
+
+  resultEl.style.display = 'block';
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.getElementById('buscar').addEventListener('click', lookup);
+document.getElementById('carnet-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') lookup();
+});
+</script>
+</body>
+</html>
