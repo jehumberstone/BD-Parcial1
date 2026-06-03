@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados — Segundo Parcial · Bases de Datos (01-2026)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f5f4f0;
+    --surface:   #ffffff;
+    --border:    #e2e0d8;
+    --text:      #1a1918;
+    --muted:     #6b6861;
+    --accent:    #2563a8;
+    --accent-lt: #dbeafe;
+    --pass:      #15803d;
+    --pass-bg:   #dcfce7;
+    --fail:      #b91c1c;
+    --fail-bg:   #fee2e2;
+    --na:        #92400e;
+    --na-bg:     #fef3c7;
+    --void:      #6b21a8;
+    --void-bg:   #f3e8ff;
+    --score-hi:  #15803d;
+    --score-md:  #b45309;
+    --score-lo:  #b91c1c;
+    --radius:    8px;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--text);
+    color: #fff;
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: .03em;
+    line-height: 1.4;
+  }
+  header h1 span {
+    display: block;
+    font-size: .75rem;
+    font-weight: 400;
+    color: #a09c95;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .header-badge {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: #a09c95;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 40px;
+  }
+  .search-inner {
+    max-width: 520px;
+  }
+  .search-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .search-row {
+    display: flex;
+    gap: 10px;
+  }
+  #sid-input {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 1rem;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color .18s;
+    letter-spacing: .05em;
+  }
+  #sid-input:focus { border-color: var(--accent); background: #fff; }
+  #sid-input::placeholder { color: #b5b0a8; }
+  #search-btn {
+    font-family: var(--mono);
+    font-size: .85rem;
+    font-weight: 600;
+    padding: 12px 22px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    letter-spacing: .04em;
+    transition: background .18s, transform .1s;
+  }
+  #search-btn:hover { background: #1d4ed8; }
+  #search-btn:active { transform: scale(.97); }
+  .search-hint {
+    margin-top: 8px;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    flex: 1;
+    padding: 36px 40px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ── STATES ── */
+  .state-idle, .state-notfound, .state-error {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .state-idle .icon, .state-notfound .icon, .state-error .icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+  }
+  .state-idle p, .state-notfound p, .state-error p {
+    font-size: .9rem;
+    line-height: 1.6;
+  }
+  .state-notfound strong { color: var(--text); }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: slideIn .25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CARD HEADER ── */
+  .card-head {
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-meta { flex: 1; }
+  .card-id {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted);
+    letter-spacing: .06em;
+    margin-bottom: 4px;
+  }
+  .card-section {
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  /* ── SCORE GAUGE ── */
+  .score-block {
+    text-align: right;
+  }
+  .score-value {
+    font-family: var(--mono);
+    font-size: 2.6rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .score-denom {
+    font-family: var(--mono);
+    font-size: 1rem;
+    color: var(--muted);
+  }
+  .score-label {
+    font-size: .72rem;
+    color: var(--muted);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .score-hi { color: var(--score-hi); }
+  .score-md { color: var(--score-md); }
+  .score-lo { color: var(--score-lo); }
+  .score-void { color: var(--void); }
+
+  /* ── VOID BANNER ── */
+  .void-banner {
+    background: var(--void-bg);
+    border-top: 1px solid #ddd6fe;
+    padding: 14px 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .void-banner .void-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .void-banner p {
+    font-size: .85rem;
+    color: var(--void);
+    line-height: 1.55;
+  }
+  .void-banner strong { font-weight: 600; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    padding: 0 28px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-track {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── QUESTIONS ── */
+  .questions-title {
+    padding: 20px 28px 12px;
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .q-item {
+    border-top: 1px solid var(--border);
+    padding: 18px 28px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0 20px;
+    align-items: start;
+  }
+
+  .q-num {
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+
+  .q-body {}
+
+  /* checks row */
+  .q-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .check-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: .7rem;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .check-pass { background: var(--pass-bg); color: var(--pass); }
+  .check-fail { background: var(--fail-bg); color: var(--fail); }
+  .check-na   { background: var(--na-bg);   color: var(--na);   }
+
+  /* feedback */
+  .q-feedback {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .q-feedback li {
+    font-size: .83rem;
+    color: var(--muted);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .q-feedback li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: #ccc;
+  }
+
+  /* score pill on right */
+  .q-score {
+    font-family: var(--mono);
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+  .qs-full { color: var(--score-hi); }
+  .qs-part { color: var(--score-md); }
+  .qs-zero { color: var(--score-lo); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: .75rem;
+    color: #b5b0a8;
+    font-family: var(--mono);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    header { padding: 20px; flex-direction: column; align-items: flex-start; }
+    .search-wrap, main { padding: 20px; }
+    .card-head { flex-direction: column; align-items: flex-start; }
+    .score-block { text-align: left; }
+    .q-item { grid-template-columns: auto 1fr; }
+    .q-score { grid-column: 2; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <span>Bases de Datos</span>
+    Resultados — Segundo Parcial
+  </h1>
+  <div class="header-badge">
+    Sección 1 · Sección 2 · Sección 3<br>
+    Ciclo 01-2026
+  </div>
+</header>
+
+<div class="search-wrap">
+  <div class="search-inner">
+    <label class="search-label" for="sid-input">Número de carnet</label>
+    <div class="search-row">
+      <input id="sid-input" type="text" placeholder="Ej. 00003525" maxlength="20" autocomplete="off" spellcheck="false">
+      <button id="search-btn" onclick="buscar()">Consultar</button>
+    </div>
+    <p class="search-hint">Ingresa tu número de carnet.</p>
+  </div>
+</div>
+
+<main id="main-area">
+  <div class="state-idle">
+    <div class="icon">🔍</div>
+    <p>Ingresa tu número de carnet para consultar<br>tus resultados del segundo parcial.</p>
+  </div>
+</main>
+
+<footer>Resultados · Bases de Datos </footer>
+
+<script>
+const CHECK_LABELS = {
+  execution: 'Ejecución',
+  columns:   'Columnas',
+  aliases:   'Alias',
+  content:   'Contenido',
+  ordering:  'Orden/paginación',
+  row_count: 'N.° de filas',
+  safe_sql:  'SQL permitido'
+};
+
+const BOOL_KEYS = ['execution','columns','aliases','content','ordering','row_count','safe_sql'];
+
+const SECTION_MAP = {
+  clave_a: 'Sección 3',
+  clave_b: 'Sección 2',
+  clave_c: 'Sección 1'
+};
+
+let DATA = null;
+
+async function loadData() {
+  if (DATA) return DATA;
+  const r = await fetch('details.json');
+  DATA = await r.json();
+  return DATA;
+}
+
+function scoreClass(pct) {
+  if (pct >= 0.7) return 'score-hi';
+  if (pct >= 0.5) return 'score-md';
+  return 'score-lo';
+}
+
+function qScoreClass(s, max) {
+  if (!max) return 'qs-zero';
+  const p = s / max;
+  if (p >= 1)   return 'qs-full';
+  if (p > 0)    return 'qs-part';
+  return 'qs-zero';
+}
+
+function renderChecks(checks) {
+  const pills = [];
+  for (const key of BOOL_KEYS) {
+    if (!(key in checks)) continue;
+    const val = checks[key];
+    if (val === 'not_checked') {
+      pills.push(`<span class="check-pill check-na">— ${CHECK_LABELS[key] || key}</span>`);
+    } else if (val === true) {
+      pills.push(`<span class="check-pill check-pass">✓ ${CHECK_LABELS[key] || key}</span>`);
+    } else if (val === false) {
+      pills.push(`<span class="check-pill check-fail">✗ ${CHECK_LABELS[key] || key}</span>`);
+    }
+  }
+  return pills.length
+    ? `<div class="q-checks">${pills.join('')}</div>`
+    : '';
+}
+
+function renderResult(record) {
+  const isVoid = record.student_id.endsWith('-A');
+  const nota10 = isVoid ? 0 : +(record.total_score / record.max_score * 10).toFixed(2);
+  const pct    = isVoid ? 0 : record.total_score / record.max_score;
+  const sClass = isVoid ? 'score-void' : scoreClass(pct);
+  const section = SECTION_MAP[record.clave] || record.clave;
+
+  // Progress bar color
+  const barColor = isVoid ? '#c4b5fd' : pct >= 0.7 ? '#16a34a' : pct >= 0.5 ? '#d97706' : '#dc2626';
+
+  // Void banner
+  const voidBanner = isVoid ? `
+    <div class="void-banner">
+      <span class="void-icon">⚠️</span>
+      <p><strong>Parcial Anulado.</strong> El estudiante se retiró sin enviar el archivo en la plataforma eCampus y luego lo envió fuera del aula.</p>
+    </div>` : '';
+
+  // Questions
+  const qsHtml = record.questions.map(q => {
+    const maxQ = q.max_score || 10;
+    const feedbackItems = isVoid
+      ? '<li>Parcial anulado, el estudiante se retiró sin enviar el archivo en la plataforma eCampus y luego lo envió fuera del aula.</li>'
+      : q.feedback.map(f => `<li>${f}</li>`).join('');
+
+    const checksHtml = isVoid ? '' : renderChecks(q.checks);
+
+    const qNota10 = isVoid ? 0 : +(q.score / maxQ * 10).toFixed(1);
+    const qClass  = isVoid ? 'qs-zero' : qScoreClass(q.score, maxQ);
+
+    return `
+      <div class="q-item">
+        <div class="q-num">P${q.pregunta}</div>
+        <div class="q-body">
+          ${checksHtml}
+          <ul class="q-feedback">${feedbackItems}</ul>
+        </div>
+        <div class="q-score ${qClass}">${isVoid ? '0' : qNota10}<span style="font-size:.65rem;color:var(--muted)">/10</span></div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="result-card">
+      <div class="card-head">
+        <div class="card-meta">
+          <div class="card-id">CARNET ${record.student_id.replace('-A','')}</div>
+          <div class="card-section">${section}</div>
+        </div>
+        <div class="score-block">
+          <div class="score-value ${sClass}">${nota10.toFixed(2)}<span class="score-denom">/10</span></div>
+          <div class="score-label">${isVoid ? 'Anulado' : 'Nota parcial'}</div>
+        </div>
+      </div>
+      ${voidBanner}
+      <div class="progress-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${isVoid ? 0 : pct*100}%; background:${barColor};"></div>
+        </div>
+      </div>
+      <div class="questions-title">Detalle por pregunta</div>
+      ${qsHtml}
+    </div>`;
+}
+
+async function buscar() {
+  const input = document.getElementById('sid-input').value.trim();
+  const area  = document.getElementById('main-area');
+
+  if (!input) {
+    area.innerHTML = `<div class="state-idle"><div class="icon">🔍</div><p>Ingresa tu número de carnet para consultar tus resultados.</p></div>`;
+    return;
+  }
+
+  area.innerHTML = `<div class="state-idle"><div class="icon">⏳</div><p>Buscando…</p></div>`;
+
+  try {
+    const data = await loadData();
+    // Search: strip -A for comparison but keep original record
+    const record = data.find(r => {
+      const id = r.student_id.toUpperCase();
+      return id === input.toUpperCase() || id === input.toUpperCase() + '-A' || id.replace('-A','') === input.toUpperCase();
+    });
+
+    if (!record) {
+      area.innerHTML = `<div class="state-notfound"><div class="icon">🔎</div><p>No se encontró el carnet <strong>${input}</strong>.<br>Verifica que el número esté escrito correctamente.</p></div>`;
+      return;
+    }
+
+    area.innerHTML = renderResult(record);
+  } catch (e) {
+    area.innerHTML = `<div class="state-error"><div class="icon">⚠️</div><p>No se pudo cargar el archivo de resultados.<br>Asegúrate de que <code>details.json</code> esté en la misma carpeta que esta página.</p></div>`;
+  }
+}
+
+// Allow Enter key
+document.getElementById('sid-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscar();
+});
+</script>
+</body>
+</html>
